@@ -1,0 +1,66 @@
+@page
+@model ApproveExpensesModel
+@{
+    ViewData["Title"] = "Approve Expenses";
+}
+
+<div style="background-color: #4A6FA5; color: white; padding: 15px; margin-bottom: 0;">
+    <h1 style="margin: 0;">Approve Expenses</h1>
+</div>
+
+<div style="background-color: #D3D3D3; padding: 20px;">
+    <h3 style="margin-top: 0;">Pending expenses:</h3>
+
+    <form method="get" style="margin-bottom: 20px;">
+        <label style="font-weight: bold; margin-right: 10px;">Filter:</label>
+        <input type="text" name="filter" value="@Model.FilterText" style="width: 400px; padding: 5px;" />
+        <button type="submit" style="padding: 5px 15px; margin-left: 10px;">Search</button>
+        <a href="/ApproveExpenses" style="padding: 5px 15px; margin-left: 5px;">Clear</a>
+    </form>
+
+    <form method="post">
+        <div style="max-height: 400px; overflow-y: auto; border: 2px solid black; background-color: white;">
+            <table style="width: 100%; border-collapse: collapse;">
+                <thead style="position: sticky; top: 0; background-color: #E8E8E8;">
+                    <tr style="border: 1px solid black;">
+                        <th style="border: 1px solid black; padding: 10px; text-align: left;">Date</th>
+                        <th style="border: 1px solid black; padding: 10px; text-align: left;">Category</th>
+                        <th style="border: 1px solid black; padding: 10px; text-align: right;">Amount</th>
+                        <th style="border: 1px solid black; padding: 10px; text-align: center; width: 80px;">Select</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (!Model.PendingExpenses.Any())
+                    {
+                        <tr>
+                            <td colspan="4" style="padding: 20px; text-align: center;">No pending expenses</td>
+                        </tr>
+                    }
+                    else
+                    {
+                        @for (int i = 0; i < Model.PendingExpenses.Count; i++)
+                        {
+                            var expense = Model.PendingExpenses[i];
+                            <tr style="border: 1px solid black;">
+                                <td style="border: 1px solid black; padding: 10px;">@expense.ExpenseDate.ToString("dd/MM/yyyy")</td>
+                                <td style="border: 1px solid black; padding: 10px;">@expense.Category.CategoryName</td>
+                                <td style="border: 1px solid black; padding: 10px; text-align: right;">£@expense.AmountGBP.ToString("0.00")</td>
+                                <td style="border: 1px solid black; padding: 10px; text-align: center;">
+                                    <input type="checkbox" name="SelectedExpenseIds" value="@expense.ExpenseId" />
+                                </td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        <div style="margin-top: 20px; text-align: right;">
+            <button type="submit" style="padding: 10px 30px; font-size: 16px; background-color: #D3D3D3; border: 2px solid black; cursor: pointer;">Approve</button>
+        </div>
+    </form>
+
+    <div style="margin-top: 20px;">
+        <a href="/Index" style="text-decoration: none; color: #0066cc;">← Back to Expenses</a>
+    </div>
+</div>

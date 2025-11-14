@@ -1,0 +1,23 @@
+{
+  "AzureOpenAI": {
+    "Endpoint": "https://oai-expense-mgmt-XXXXX.openai.azure.com/",
+    "DeploymentName": "gpt-4o-mini",
+    "EmbeddingDeploymentName": "text-embedding-ada-002",
+    "ApiVersion": "2024-02-15-preview",
+    "UseManagedIdentity": true
+  },
+  "AzureSearch": {
+    "Endpoint": "https://srch-expense-mgmt-XXXXX.search.windows.net",
+    "IndexName": "expense-context-index",
+    "UseManagedIdentity": true
+  },
+  "Storage": {
+    "BlobEndpoint": "https://stexpenseXXXXX.blob.core.windows.net/",
+    "ContainerName": "rag-documents",
+    "UseManagedIdentity": true
+  },
+  "ChatUI": {
+    "Enabled": false,
+    "Description": "Set to true to enable GenAI chat UI functionality"
+  }
+}
