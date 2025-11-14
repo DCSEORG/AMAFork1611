@@ -1,0 +1,20 @@
+# .NET build outputs
+bin/
+obj/
+publish/
+
+# Visual Studio
+.vs/
+*.user
+*.suo
+
+# Temporary files
+*.tmp
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Don't exclude app.zip - we need this for deployment
+!app.zip

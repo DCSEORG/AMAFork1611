@@ -1,0 +1,268 @@
+@page
+@model ExpenseManagementApp.Pages.ChatUIModel
+@{
+    ViewData["Title"] = "GenAI Chat";
+}
+
+<style>
+    .chat-container {
+        max-width: 900px;
+        margin: 20px auto;
+        background-color: #f5f5f5;
+        border-radius: 10px;
+        padding: 20px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    
+    .chat-header {
+        background-color: #4A6FA5;
+        color: white;
+        padding: 15px;
+        border-radius: 5px;
+        margin-bottom: 20px;
+    }
+    
+    .chat-messages {
+        height: 500px;
+        overflow-y: auto;
+        background-color: white;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+        padding: 15px;
+        margin-bottom: 15px;
+    }
+    
+    .message {
+        margin-bottom: 15px;
+        padding: 10px;
+        border-radius: 5px;
+    }
+    
+    .user-message {
+        background-color: #e3f2fd;
+        margin-left: 50px;
+        text-align: right;
+    }
+    
+    .ai-message {
+        background-color: #f5f5f5;
+        margin-right: 50px;
+    }
+    
+    .message-role {
+        font-weight: bold;
+        margin-bottom: 5px;
+        font-size: 0.9em;
+    }
+    
+    .chat-input-container {
+        display: flex;
+        gap: 10px;
+    }
+    
+    .chat-input {
+        flex: 1;
+        padding: 10px;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+        font-size: 14px;
+    }
+    
+    .chat-send-btn {
+        padding: 10px 30px;
+        background-color: #4A6FA5;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 14px;
+    }
+    
+    .chat-send-btn:hover {
+        background-color: #3a5a85;
+    }
+    
+    .chat-send-btn:disabled {
+        background-color: #ccc;
+        cursor: not-allowed;
+    }
+    
+    .loading {
+        text-align: center;
+        color: #666;
+        font-style: italic;
+        padding: 10px;
+    }
+    
+    .info-box {
+        background-color: #fff3cd;
+        border: 1px solid #ffc107;
+        padding: 15px;
+        border-radius: 5px;
+        margin-bottom: 20px;
+    }
+    
+    .example-queries {
+        margin-top: 10px;
+    }
+    
+    .example-query {
+        display: inline-block;
+        background-color: #e0e0e0;
+        padding: 5px 10px;
+        margin: 5px;
+        border-radius: 3px;
+        cursor: pointer;
+        font-size: 0.9em;
+    }
+    
+    .example-query:hover {
+        background-color: #d0d0d0;
+    }
+</style>
+
+<div class="chat-container">
+    <div class="chat-header">
+        <h2 style="margin: 0;">💬 Expense Management AI Assistant</h2>
+        <p style="margin: 5px 0 0 0; font-size: 0.9em;">Ask questions in natural language about your expenses</p>
+    </div>
+
+    @if (!Model.IsChatUIEnabled)
+    {
+        <div class="info-box">
+            <h3>⚠️ Chat UI is not enabled</h3>
+            <p>The GenAI Chat UI feature is currently disabled. To enable it:</p>
+            <ol>
+                <li>Set <code>INCLUDE_CHAT_UI=true</code> in your environment</li>
+                <li>Run <code>./deploy.sh</code> to deploy Azure OpenAI and supporting resources</li>
+                <li>Update <code>GenAISettings.json</code> with your resource endpoints</li>
+                <li>Set <code>ChatUI.Enabled = true</code> in GenAISettings.json</li>
+            </ol>
+            <p><a href="/Index">← Back to Expense Management</a></p>
+        </div>
+    }
+    else
+    {
+        <div class="info-box">
+            <strong>💡 Example queries you can try:</strong>
+            <div class="example-queries">
+                <span class="example-query" onclick="setQuery('Show me all submitted expenses')">Show me all submitted expenses</span>
+                <span class="example-query" onclick="setQuery('What is the total of approved expenses?')">What is the total of approved expenses?</span>
+                <span class="example-query" onclick="setQuery('Create a new expense for £50 in the Travel category')">Create a new expense for £50</span>
+                <span class="example-query" onclick="setQuery('List all expense categories')">List all categories</span>
+            </div>
+        </div>
+
+        <div id="chatMessages" class="chat-messages">
+            <div class="message ai-message">
+                <div class="message-role">🤖 AI Assistant</div>
+                <div>Hello! I'm your AI assistant for expense management. I can help you view, create, and manage expenses using natural language. What would you like to do?</div>
+            </div>
+        </div>
+
+        <div class="chat-input-container">
+            <input type="text" id="chatInput" class="chat-input" placeholder="Type your question or request here..." />
+            <button id="sendBtn" class="chat-send-btn" onclick="sendMessage()">Send</button>
+        </div>
+
+        <div style="margin-top: 10px; text-align: center;">
+            <a href="/Index" style="color: #4A6FA5; text-decoration: none;">← Back to Expense Management</a>
+        </div>
+    }
+</div>
+
+@if (Model.IsChatUIEnabled)
+{
+    <script>
+        const chatMessages = document.getElementById('chatMessages');
+        const chatInput = document.getElementById('chatInput');
+        const sendBtn = document.getElementById('sendBtn');
+
+        // Handle Enter key
+        chatInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendMessage();
+            }
+        });
+
+        function setQuery(query) {
+            chatInput.value = query;
+            chatInput.focus();
+        }
+
+        async function sendMessage() {
+            const message = chatInput.value.trim();
+            if (!message) return;
+
+            // Disable input while processing
+            chatInput.disabled = true;
+            sendBtn.disabled = true;
+
+            // Add user message to chat
+            addMessage('user', message);
+            chatInput.value = '';
+
+            // Show loading indicator
+            const loadingDiv = document.createElement('div');
+            loadingDiv.className = 'loading';
+            loadingDiv.id = 'loading';
+            loadingDiv.textContent = 'AI is thinking...';
+            chatMessages.appendChild(loadingDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+
+            try {
+                // Call the chat API endpoint
+                const response = await fetch('/api/chat', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ message: message })
+                });
+
+                // Remove loading indicator
+                const loading = document.getElementById('loading');
+                if (loading) loading.remove();
+
+                if (response.ok) {
+                    const data = await response.json();
+                    addMessage('assistant', data.response);
+                } else {
+                    addMessage('assistant', 'Sorry, I encountered an error processing your request. Please try again.');
+                }
+            } catch (error) {
+                // Remove loading indicator
+                const loading = document.getElementById('loading');
+                if (loading) loading.remove();
+                
+                addMessage('assistant', 'Sorry, I encountered a network error. Please check your connection and try again.');
+                console.error('Chat error:', error);
+            }
+
+            // Re-enable input
+            chatInput.disabled = false;
+            sendBtn.disabled = false;
+            chatInput.focus();
+        }
+
+        function addMessage(role, content) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${role === 'user' ? 'user-message' : 'ai-message'}`;
+            
+            const roleDiv = document.createElement('div');
+            roleDiv.className = 'message-role';
+            roleDiv.textContent = role === 'user' ? '👤 You' : '🤖 AI Assistant';
+            
+            const contentDiv = document.createElement('div');
+            contentDiv.textContent = content;
+            
+            messageDiv.appendChild(roleDiv);
+            messageDiv.appendChild(contentDiv);
+            chatMessages.appendChild(messageDiv);
+            
+            // Scroll to bottom
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+    </script>
+}

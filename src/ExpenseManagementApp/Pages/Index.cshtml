@@ -1,0 +1,44 @@
+﻿@page
+@model IndexModel
+@{
+    ViewData["Title"] = "Expenses";
+}
+
+<div style="background-color: #4A6FA5; color: white; padding: 15px; margin-bottom: 20px;">
+    <h1 style="margin: 0;">Expenses</h1>
+</div>
+
+<div style="background-color: #D3D3D3; padding: 20px;">
+    <form method="get" style="margin-bottom: 20px;">
+        <label style="font-weight: bold; margin-right: 10px;">Filter:</label>
+        <input type="text" name="filter" value="@Model.FilterText" style="width: 400px; padding: 5px;" />
+        <button type="submit" style="padding: 5px 15px; margin-left: 10px;">Search</button>
+        <a href="/Index" style="padding: 5px 15px; margin-left: 5px;">Clear</a>
+    </form>
+
+    <table style="width: 100%; border-collapse: collapse; background-color: white; border: 2px solid black;">
+        <thead>
+            <tr style="background-color: #E8E8E8; border: 1px solid black;">
+                <th style="border: 1px solid black; padding: 10px; text-align: left;">Date</th>
+                <th style="border: 1px solid black; padding: 10px; text-align: left;">Category</th>
+                <th style="border: 1px solid black; padding: 10px; text-align: right;">Amount</th>
+                <th style="border: 1px solid black; padding: 10px; text-align: left;">Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var expense in Model.Expenses)
+            {
+                <tr style="border: 1px solid black;">
+                    <td style="border: 1px solid black; padding: 10px;">@expense.ExpenseDate.ToString("dd/MM/yyyy")</td>
+                    <td style="border: 1px solid black; padding: 10px;">@expense.Category.CategoryName</td>
+                    <td style="border: 1px solid black; padding: 10px; text-align: right;">£@expense.AmountGBP.ToString("0.00")</td>
+                    <td style="border: 1px solid black; padding: 10px;">@expense.Status.StatusName</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+    <div style="margin-top: 20px; text-align: right;">
+        <a href="/AddExpense" style="padding: 10px 30px; background-color: #D3D3D3; border: 2px solid black; text-decoration: none; color: black; display: inline-block;">Add Expense</a>
+    </div>
+</div>
